@@ -8,26 +8,25 @@
 */
 package com.liangliang.action;
 
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
 import com.liangliang.entity.MsOrder;
 import com.liangliang.entity.MsProductInfo;
 import com.liangliang.entity.OnLine;
+import com.liangliang.entity.cart.Cart;
 import com.liangliang.service.MsOrderService;
 import com.liangliang.service.MsProductInfoService;
 import com.liangliang.service.pay.AliPay;
 import com.liangliang.service.pay.WxPay;
 import com.liangliang.service.pay.YlPay;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @description: 功能描述 ()
@@ -57,13 +56,65 @@ public class OrderAction {
 	YlPay ylPay;
 
 	/**
-	 * 
+	 *
 	 * @description: 功能描述： (跳转到支付页面)
 	 * @author: liangliang
 	 * @version: 2.0
 	 * @date:  2019年5月12日 下午8:13:05
 	 * @param request
-	 * @param payType
+	 *            1，代表支付宝 2,代表微信，3,代表银联
+	 * @param tradeId
+	 * @param payAmount
+	 * @return
+	 */
+	@RequestMapping(value = "cartToOrder")
+	public String cartToOrder(HttpServletRequest request, Integer id,  Integer payAmount) {
+        HttpSession session = request.getSession();
+        OnLine onLine = (OnLine) session.getAttribute("onLine");
+        if (onLine == null) {
+            return "redirect:/";
+        }
+        Cart cart = (Cart) request.getSession().getAttribute("cart");
+        Integer total = (int)cart.getTotal();
+        Integer userId = onLine.getMsUser().getId();
+
+
+        //在购物车页面有点击提交订单 ，
+        MsOrder msOrder =  new MsOrder();
+        msOrder.setUserId(userId);
+        msOrder.setPayAmount(total);
+
+        //设置订单号
+        String tradeId = UUID.randomUUID().toString();
+        msOrder.setTradeId(tradeId);
+
+
+        //设置状态
+        msOrder.setPayStatus(1);
+
+        //设置时间
+        Date now = new Date();
+        msOrder.setCreateTime(now);
+        msOrderService.insert(msOrder);
+        request.getSession().removeAttribute("cart");
+        //提交成功订单  清空 购物车
+		return "redirect:/orderAction/queryOrderByUserId";
+
+	}
+
+
+
+
+
+
+
+	/**
+	 *
+	 * @description: 功能描述： (跳转到支付页面)
+	 * @author: liangliang
+	 * @version: 2.0
+	 * @date:  2019年5月12日 下午8:13:05
+	 * @param request
 	 *            1，代表支付宝 2,代表微信，3,代表银联
 	 * @param tradeId
 	 * @param payAmount
@@ -85,7 +136,6 @@ public class OrderAction {
 	 * @version: 2.0
 	 * @date:  2019年5月12日 下午2:29:38
 	 * @param request
-	 * @param msOrder
 	 * @return
 	 */
 	@RequestMapping(value = "applyRefund")
@@ -108,7 +158,6 @@ public class OrderAction {
 	 * @version: 2.0
 	 * @date:  2019年5月12日 下午2:29:38
 	 * @param request
-	 * @param msOrder
 	 * @return
 	 */
 	@RequestMapping(value = "auditRefund")
@@ -154,7 +203,6 @@ public class OrderAction {
 	 * @version: 2.0
 	 * @date:  2019年5月12日 下午2:29:38
 	 * @param request
-	 * @param msOrder
 	 * @return
 	 */
 	@RequestMapping(value = "orderListByMerId")
@@ -217,7 +265,6 @@ public class OrderAction {
 	 * @version: 2.0
 	 * @date:  2019年5月12日 下午2:29:38
 	 * @param request
-	 * @param msOrder
 	 * @return
 	 */
 	@RequestMapping(value = "queryOrderByUserId")

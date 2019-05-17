@@ -93,7 +93,7 @@ desired effect
                       <input type="text" name="table_search" class="form-control pull-right" value="总计：${cart.total}" disabled="">
 
                       <div class="input-group-btn">
-                          <button type="submit" class="btn btn-default"><i class=""></i>提交订单</button>
+                          <button type="submit" class="btn btn-default" onclick="javascrtpt:window.location.href='${pageContext.request.contextPath }/orderAction/cartToOrder'"><i class=""></i>提交订单</button>
                       </div>
                   </div>
               </div>
